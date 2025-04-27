@@ -1,6 +1,6 @@
-// Firebase configuration
+// Initialize Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
+     apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
   authDomain: "mrpi-40e83.firebaseapp.com",
   databaseURL: "https://mrpi-40e83-default-rtdb.firebaseio.com",
   projectId: "mrpi-40e83",
@@ -15,11 +15,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase();
 
-// Toggle between sign-in and sign-up forms
-function toggleForm(form) {
-    document.getElementById('signin').style.display = form === 'signin' ? 'block' : 'none';
-    document.getElementById('signup').style.display = form === 'signup' ? 'block' : 'none';
-}
+// Check if the user is already signed in when the page loads
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("User is signed in:", user);
+        toggleDashboard(); // Automatically show the dashboard
+    } else {
+        console.log("No user is signed in.");
+    }
+});
 
 // Sign up form submit
 document.getElementById('signup-form').addEventListener('submit', function (e) {
@@ -45,6 +49,7 @@ document.getElementById('signin-form').addEventListener('submit', function (e) {
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
+            console.log("User signed in:", userCredential.user);
             toggleDashboard();
         })
         .catch((error) => {
@@ -120,6 +125,7 @@ function viewPatients() {
 function logout() {
     signOut(auth)
         .then(() => {
+            console.log("User logged out.");
             document.getElementById('dashboard').style.display = 'none';
             toggleForm('signin');
         })
@@ -127,6 +133,7 @@ function logout() {
             alert('Error logging out: ' + error.message);
         });
 }
+
 
 
 
