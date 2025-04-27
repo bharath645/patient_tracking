@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Tracking App</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Firebase SDK -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
@@ -63,136 +63,8 @@
         </div>
     </div>
 
-    <script>
-        // Firebase Config
-        const firebaseConfig = {
-              apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
-  authDomain: "mrpi-40e83.firebaseapp.com",
-  databaseURL: "https://mrpi-40e83-default-rtdb.firebaseio.com",
-  projectId: "mrpi-40e83",
-  storageBucket: "mrpi-40e83.firebasestorage.app",
-  messagingSenderId: "1074708876532",
-  appId: "1:1074708876532:web:4d896e384c1e5a7893e2a1",
-  measurementId: "G-KBSLZZH0EX"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-
-        // Toggle between Sign Up and Sign In forms
-        function toggleForm(form) {
-            document.getElementById('signin').style.display = form === 'signin' ? 'block' : 'none';
-            document.getElementById('signup').style.display = form === 'signup' ? 'block' : 'none';
-        }
-
-        // Sign In
-        document.getElementById('signin-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    toggleDashboard();
-                })
-                .catch(error => {
-                    alert('Error: ' + error.message);
-                });
-        });
-
-        // Sign Up
-        document.getElementById('signup-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    alert('User created successfully! Please Sign In.');
-                    toggleForm('signin');
-                })
-                .catch(error => {
-                    alert('Error: ' + error.message);
-                });
-        });
-
-        // Toggle to Dashboard view
-        function toggleDashboard() {
-            document.getElementById('signin').style.display = 'none';
-            document.getElementById('signup').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-        }
-
-        // Add Patient
-        document.getElementById('patient-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const name = document.getElementById('patient-name').value;
-            const age = document.getElementById('patient-age').value;
-            const gender = document.getElementById('patient-gender').value;
-            const address = document.getElementById('patient-address').value;
-            const symptoms = document.getElementById('patient-symptoms').value;
-
-            const patient = {
-                name,
-                age,
-                gender,
-                address,
-                symptoms
-            };
-
-            // Save patient data to Firebase Realtime Database
-            const patientRef = db.ref('patients/' + new Date().getTime());
-            patientRef.set(patient)
-                .then(() => {
-                    alert('Patient added successfully!');
-                    document.getElementById('patient-form').reset();
-                    document.getElementById('add-patient-form').style.display = 'none';
-                })
-                .catch(error => {
-                    alert('Error saving patient data: ' + error.message);
-                });
-        });
-
-        // Show the add patient form
-        function showAddPatientForm() {
-            document.getElementById('add-patient-form').style.display = 'block';
-        }
-
-        // View Patients
-        function viewPatients() {
-            const patientList = document.getElementById('patient-list');
-            const patientsRef = db.ref('patients/');
-            patientsRef.once('value', (snapshot) => {
-                patientList.innerHTML = '';
-                const patients = snapshot.val();
-                if (patients) {
-                    Object.keys(patients).forEach(key => {
-                        const patient = patients[key];
-                        const li = document.createElement('li');
-                        li.textContent = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
-                        patientList.appendChild(li);
-                    });
-                } else {
-                    patientList.innerHTML = '<li>No patients found.</li>';
-                }
-            });
-        }
-
-        // Logout
-        function logout() {
-            auth.signOut()
-                .then(() => {
-                    alert('You have logged out');
-                    document.getElementById('dashboard').style.display = 'none';
-                    toggleForm('signin');
-                })
-                .catch(error => {
-                    alert('Error logging out: ' + error.message);
-                });
-        }
-    </script>
-
+    <script src="app.js"></script>
 </body>
 </html>
+
+
