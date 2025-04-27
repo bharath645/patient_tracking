@@ -1,4 +1,3 @@
-// Initialize Firebase
 // Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
@@ -12,80 +11,55 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 
-let loggedInUser = null;
-let users = [];
-
-// Function to toggle between forms
+// Toggle between Sign In and Sign Up Forms
 function toggleForm(form) {
-    document.getElementById('signin').style.display = 'none';
-    document.getElementById('signup').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'none';
-
-    if (form === 'signin') {
-        document.getElementById('signin').style.display = 'block';
-    } else if (form === 'signup') {
-        document.getElementById('signup').style.display = 'block';
-    } else if (form === 'dashboard') {
-        document.getElementById('dashboard').style.display = 'block';
-    }
+    document.getElementById('signin').style.display = form === 'signin' ? 'block' : 'none';
+    document.getElementById('signup').style.display = form === 'signup' ? 'block' : 'none';
 }
 
-// Sign In Form Submission
+// Sign In
 document.getElementById('signin-form').addEventListener('submit', function (e) {
     e.preventDefault();
-
-    const email = document.getElementById('signin-email').value;
+    const username = document.getElementById('signin-username').value;
     const password = document.getElementById('signin-password').value;
 
-    auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            loggedInUser = userCredential.user;
-            toggleForm('dashboard');
+    auth.signInWithEmailAndPassword(username, password)
+        .then(userCredential => {
+            toggleDashboard();
         })
-        .catch((error) => {
-            alert('Invalid credentials');
+        .catch(error => {
+            alert(error.message);
         });
 });
 
-// Sign Up Form Submission
+// Sign Up
 document.getElementById('signup-form').addEventListener('submit', function (e) {
     e.preventDefault();
-
-    const email = document.getElementById('signup-email').value;
+    const username = document.getElementById('signup-username').value;
     const password = document.getElementById('signup-password').value;
 
-    auth.createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            loggedInUser = userCredential.user;
-            toggleForm('dashboard');
+    auth.createUserWithEmailAndPassword(username, password)
+        .then(userCredential => {
+            alert("User created successfully!");
+            toggleForm('signin');
         })
-        .catch((error) => {
-            alert('Error creating user');
+        .catch(error => {
+            alert(error.message);
         });
 });
 
-// Logout Function
-function logout() {
-    auth.signOut()
-        .then(() => {
-            loggedInUser = null;
-            toggleForm('signin');
-        })
-        .catch((error) => {
-            console.error('Error signing out', error);
-        });
+// Toggle Dashboard visibility
+function toggleDashboard() {
+    document.getElementById('signin').style.display = 'none';
+    document.getElementById('signup').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
 }
 
-// Show Add Patient Form
-function showAddPatientForm() {
-    document.getElementById('add-patient-form').style.display = 'block';
-}
-
-// Add Patient to Firebase
+// Add Patient
 document.getElementById('patient-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -95,36 +69,55 @@ document.getElementById('patient-form').addEventListener('submit', function (e) 
     const address = document.getElementById('patient-address').value;
     const symptoms = document.getElementById('patient-symptoms').value;
 
-    const patientRef = database.ref('patients');
-    patientRef.push({
+    const patientData = {
         name,
         age,
         gender,
         address,
         symptoms
-    });
+    };
 
-    alert('Patient added successfully!');
+    // Save patient data to Firebase Realtime Database
+    const userId = auth.currentUser.uid;
+    const patientRef = database.ref('patients/' + userId);
+    patientRef.push(patientData);
+
+    alert("Patient added successfully!");
     document.getElementById('patient-form').reset();
     document.getElementById('add-patient-form').style.display = 'none';
 });
 
-// View All Patients
-function viewPatients() {
-    const patientList = document.getElementById('patient-list');
-    patientList.innerHTML = '';
+// Show Add Patient Form
+function showAddPatientForm() {
+    document.getElementById('add-patient-form').style.display = 'block';
+}
 
-    const patientRef = database.ref('patients');
-    patientRef.on('value', (snapshot) => {
-        const patients = snapshot.val();
-        for (let id in patients) {
-            const patient = patients[id];
+// View Patients
+function viewPatients() {
+    const userId = auth.currentUser.uid;
+    const patientRef = database.ref('patients/' + userId);
+
+    patientRef.once('value', snapshot => {
+        const patientList = document.getElementById('patient-list');
+        patientList.innerHTML = '';
+
+        snapshot.forEach(childSnapshot => {
+            const patient = childSnapshot.val();
             const li = document.createElement('li');
             li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
             patientList.appendChild(li);
-        }
+        });
     });
 }
+
+// Logout
+function logout() {
+    auth.signOut().then(() => {
+        document.getElementById('dashboard').style.display = 'none';
+        toggleForm('signin');
+    });
+}
+
 
 
 
