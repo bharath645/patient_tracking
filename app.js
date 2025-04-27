@@ -1,25 +1,32 @@
-let users = [];
-let loggedInUser = null;
-let patients = [];
+// Initialize Firebase
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
 
-function toggleForm(form) {
-    document.getElementById('signin').style.display = form === 'signin' ? 'block' : 'none';
-    document.getElementById('signup').style.display = form === 'signup' ? 'block' : 'none';
-}
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
+// Authentication Logic (Sign Up, Sign In)
 document.getElementById('signin-form').addEventListener('submit', function (e) {
     e.preventDefault();
     const username = document.getElementById('signin-username').value;
     const password = document.getElementById('signin-password').value;
     
-    const user = users.find(user => user.username === username && user.password === password);
-    
-    if (user) {
-        loggedInUser = user;
-        toggleDashboard();
-    } else {
-        alert('Invalid credentials');
-    }
+    auth.signInWithEmailAndPassword(username, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            alert('Sign-In Successful!');
+            toggleDashboard();
+        })
+        .catch((error) => {
+            alert('Invalid credentials: ' + error.message);
+        });
 });
 
 document.getElementById('signup-form').addEventListener('submit', function (e) {
@@ -27,23 +34,18 @@ document.getElementById('signup-form').addEventListener('submit', function (e) {
     const username = document.getElementById('signup-username').value;
     const password = document.getElementById('signup-password').value;
 
-    const existingUser = users.find(user => user.username === username);
-
-    if (existingUser) {
-        alert('User already exists!');
-    } else {
-        users.push({ username, password });
-        alert('User created successfully! Please Sign In.');
-        toggleForm('signin');
-    }
+    auth.createUserWithEmailAndPassword(username, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            alert('User created successfully! Please Sign In.');
+            toggleForm('signin');
+        })
+        .catch((error) => {
+            alert('Error signing up: ' + error.message);
+        });
 });
 
-function toggleDashboard() {
-    document.getElementById('signin').style.display = 'none';
-    document.getElementById('signup').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-}
-
+// Add Patient Data to Realtime Database
 document.getElementById('patient-form').addEventListener('submit', function (e) {
     e.preventDefault();
     const name = document.getElementById('patient-name').value;
@@ -52,31 +54,69 @@ document.getElementById('patient-form').addEventListener('submit', function (e) 
     const address = document.getElementById('patient-address').value;
     const symptoms = document.getElementById('patient-symptoms').value;
 
-    const patient = { name, age, gender, address, symptoms };
-    patients.push(patient);
-    alert('Patient added successfully!');
-    document.getElementById('patient-form').reset();
-    document.getElementById('add-patient-form').style.display = 'none';
+    const newPatientRef = db.ref('patients').push();
+    newPatientRef.set({
+        name: name,
+        age: age,
+        gender: gender,
+        address: address,
+        symptoms: symptoms
+    })
+    .then(() => {
+        alert('Patient added successfully!');
+        document.getElementById('patient-form').reset();
+        document.getElementById('add-patient-form').style.display = 'none';
+    })
+    .catch((error) => {
+        alert('Error adding patient: ' + error.message);
+    });
 });
+
+// View Patients from Realtime Database
+function viewPatients() {
+    const patientList = document.getElementById('patient-list');
+    patientList.innerHTML = '';
+
+    db.ref('patients').once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            const patient = childSnapshot.val();
+            const li = document.createElement('li');
+            li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}, Address: ${patient.address}`;
+            patientList.appendChild(li);
+        });
+    })
+    .catch((error) => {
+        alert('Error retrieving patients: ' + error.message);
+    });
+}
+
+// Log out user
+function logout() {
+    auth.signOut()
+        .then(() => {
+            alert('Logged out successfully!');
+            toggleForm('signin');
+        })
+        .catch((error) => {
+            alert('Error logging out: ' + error.message);
+        });
+}
+
+// Utility Functions for Form Toggle
+function toggleForm(form) {
+    document.getElementById('signin').style.display = form === 'signin' ? 'block' : 'none';
+    document.getElementById('signup').style.display = form === 'signup' ? 'block' : 'none';
+}
+
+function toggleDashboard() {
+    document.getElementById('signin').style.display = 'none';
+    document.getElementById('signup').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+}
 
 function showAddPatientForm() {
     document.getElementById('add-patient-form').style.display = 'block';
 }
 
-function viewPatients() {
-    const patientList = document.getElementById('patient-list');
-    patientList.innerHTML = '';
-    patients.forEach(patient => {
-        const li = document.createElement('li');
-        li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
-        patientList.appendChild(li);
-    });
-}
-
-function logout() {
-    loggedInUser = null;
-    document.getElementById('dashboard').style.display = 'none';
-    toggleForm('signin');
-}
 
 
