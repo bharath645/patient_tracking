@@ -29,6 +29,7 @@ document.getElementById('signin-form').addEventListener('submit', function (e) {
 
     auth.signInWithEmailAndPassword(username, password)
         .then(userCredential => {
+            // On successful login, toggle to the dashboard view
             toggleDashboard();
         })
         .catch(error => {
@@ -52,11 +53,40 @@ document.getElementById('signup-form').addEventListener('submit', function (e) {
         });
 });
 
-// Toggle Dashboard visibility
+// Toggle Dashboard visibility (called after login)
 function toggleDashboard() {
+    // Hide Sign-In and Sign-Up forms
     document.getElementById('signin').style.display = 'none';
     document.getElementById('signup').style.display = 'none';
+    
+    // Show Dashboard
     document.getElementById('dashboard').style.display = 'block';
+    
+    // Optionally, you can show the patients right after login
+    viewPatients();
+}
+
+// Show Add Patient Form
+function showAddPatientForm() {
+    document.getElementById('add-patient-form').style.display = 'block';
+}
+
+// View Patients
+function viewPatients() {
+    const userId = auth.currentUser.uid;
+    const patientRef = database.ref('patients/' + userId);
+
+    patientRef.once('value', snapshot => {
+        const patientList = document.getElementById('patient-list');
+        patientList.innerHTML = '';
+
+        snapshot.forEach(childSnapshot => {
+            const patient = childSnapshot.val();
+            const li = document.createElement('li');
+            li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
+            patientList.appendChild(li);
+        });
+    });
 }
 
 // Add Patient
@@ -85,30 +115,8 @@ document.getElementById('patient-form').addEventListener('submit', function (e) 
     alert("Patient added successfully!");
     document.getElementById('patient-form').reset();
     document.getElementById('add-patient-form').style.display = 'none';
+    viewPatients(); // Refresh patient list after adding
 });
-
-// Show Add Patient Form
-function showAddPatientForm() {
-    document.getElementById('add-patient-form').style.display = 'block';
-}
-
-// View Patients
-function viewPatients() {
-    const userId = auth.currentUser.uid;
-    const patientRef = database.ref('patients/' + userId);
-
-    patientRef.once('value', snapshot => {
-        const patientList = document.getElementById('patient-list');
-        patientList.innerHTML = '';
-
-        snapshot.forEach(childSnapshot => {
-            const patient = childSnapshot.val();
-            const li = document.createElement('li');
-            li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
-            patientList.appendChild(li);
-        });
-    });
-}
 
 // Logout
 function logout() {
@@ -117,6 +125,16 @@ function logout() {
         toggleForm('signin');
     });
 }
+
+// Listen for auth state changes (if the user is already logged in)
+auth.onAuthStateChanged(user => {
+    if (user) {
+        toggleDashboard();  // Automatically go to dashboard if already signed in
+    } else {
+        toggleForm('signin'); // Show sign-in form if not logged in
+    }
+});
+
 
 
 
