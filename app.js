@@ -24,10 +24,10 @@ function toggleForm(form) {
 // Sign In
 document.getElementById('signin-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    const username = document.getElementById('signin-username').value;
+    const email = document.getElementById('signin-email').value;
     const password = document.getElementById('signin-password').value;
 
-    auth.signInWithEmailAndPassword(username, password)
+    auth.signInWithEmailAndPassword(email, password)
         .then(userCredential => {
             // On successful login, toggle to the dashboard view
             toggleDashboard();
@@ -40,10 +40,10 @@ document.getElementById('signin-form').addEventListener('submit', function (e) {
 // Sign Up
 document.getElementById('signup-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    const username = document.getElementById('signup-username').value;
+    const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
 
-    auth.createUserWithEmailAndPassword(username, password)
+    auth.createUserWithEmailAndPassword(email, password)
         .then(userCredential => {
             alert("User created successfully!");
             toggleForm('signin');
@@ -134,6 +134,7 @@ auth.onAuthStateChanged(user => {
         toggleForm('signin'); // Show sign-in form if not logged in
     }
 });
+
 
 
 
