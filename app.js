@@ -1,11 +1,13 @@
 // Initialize Firebase
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
+    authDomain: "mrpi-40e83.firebaseapp.com",
+    databaseURL: "https://mrpi-40e83-default-rtdb.firebaseio.com",
+    projectId: "mrpi-40e83",
+    storageBucket: "mrpi-40e83.firebasestorage.app",
+    messagingSenderId: "1074708876532",
+    appId: "1:1074708876532:web:4d896e384c1e5a7893e2a1",
+    measurementId: "G-KBSLZZH0EX"
 };
 
 const app = firebase.initializeApp(firebaseConfig);
