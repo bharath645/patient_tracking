@@ -1,6 +1,6 @@
-// Firebase Configuration
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
+    apiKey: "AIzaSyBvfmnKxsyKGpvdULLYv6SYHqfgRlWO75M",
   authDomain: "mrpi-40e83.firebaseapp.com",
   databaseURL: "https://mrpi-40e83-default-rtdb.firebaseio.com",
   projectId: "mrpi-40e83",
@@ -11,124 +11,123 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getDatabase();
 
-// Initialize Firebase Authentication and Database services
-const auth = firebase.auth();
-const database = firebase.database();
-
-// Function to toggle between Sign In and Sign Up forms
+// Toggle between sign-in and sign-up forms
 function toggleForm(form) {
     document.getElementById('signin').style.display = form === 'signin' ? 'block' : 'none';
     document.getElementById('signup').style.display = form === 'signup' ? 'block' : 'none';
 }
 
-// Sign Up functionality
+// Sign up form submit
 document.getElementById('signup-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    const username = document.getElementById('signup-username').value;
+    const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
 
-    auth.createUserWithEmailAndPassword(username, password)
+    createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            const user = userCredential.user;
-            database.ref('users/' + user.uid).set({
-                username: username,
-                email: user.email
-            })
-            .then(() => {
-                alert('User created successfully! Please Sign In.');
-                toggleForm('signin');
-            })
-            .catch((error) => {
-                alert('Error storing user data: ' + error.message);
-            });
+            alert('User created successfully! Please Sign In.');
+            toggleForm('signin');
         })
         .catch((error) => {
-            alert(error.message);
+            alert('Error: ' + error.message);
         });
 });
 
-// Sign In functionality
+// Sign in form submit
 document.getElementById('signin-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    const username = document.getElementById('signin-username').value;
+    const email = document.getElementById('signin-email').value;
     const password = document.getElementById('signin-password').value;
 
-    auth.signInWithEmailAndPassword(username, password)
+    signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            loggedInUser = userCredential.user;
             toggleDashboard();
         })
         .catch((error) => {
-            alert('Invalid credentials');
+            alert('Error: ' + error.message);
         });
 });
 
-// Toggle Dashboard visibility after sign-in
+// Toggle to dashboard
 function toggleDashboard() {
     document.getElementById('signin').style.display = 'none';
     document.getElementById('signup').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
 }
 
-// Function to view patients from Firebase Database
-function viewPatients() {
-    const patientList = document.getElementById('patient-list');
-    patientList.innerHTML = '';
-
-    database.ref('patients').once('value')
-        .then((snapshot) => {
-            snapshot.forEach((childSnapshot) => {
-                const patient = childSnapshot.val();
-                const li = document.createElement('li');
-                li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
-                patientList.appendChild(li);
-            });
-        })
-        .catch((error) => {
-            console.error('Error fetching patients:', error);
-        });
-}
-
-// Function to add patient to Firebase Database
+// Add patient form submit
 document.getElementById('patient-form').addEventListener('submit', function (e) {
     e.preventDefault();
+
     const name = document.getElementById('patient-name').value;
     const age = document.getElementById('patient-age').value;
     const gender = document.getElementById('patient-gender').value;
     const address = document.getElementById('patient-address').value;
     const symptoms = document.getElementById('patient-symptoms').value;
 
-    const patient = { name, age, gender, address, symptoms };
+    const patient = {
+        name,
+        age,
+        gender,
+        address,
+        symptoms
+    };
 
-    database.ref('patients').push(patient)
-        .then(() => {
-            alert('Patient added successfully!');
-            document.getElementById('patient-form').reset();
-            document.getElementById('add-patient-form').style.display = 'none';
-        })
-        .catch((error) => {
-            alert('Error adding patient: ' + error.message);
-        });
+    const patientRef = ref(db, 'patients/' + new Date().getTime());
+    set(patientRef, patient).then(() => {
+        alert('Patient added successfully!');
+        document.getElementById('patient-form').reset();
+        document.getElementById('add-patient-form').style.display = 'none';
+    }).catch((error) => {
+        alert('Error saving patient data: ' + error.message);
+    });
 });
 
-// Function to show the Add Patient Form
+// Show the add patient form
 function showAddPatientForm() {
     document.getElementById('add-patient-form').style.display = 'block';
 }
 
-// Logout functionality
+// View patients
+function viewPatients() {
+    const patientList = document.getElementById('patient-list');
+    const reference = ref(db, 'patients/');
+
+    get(reference).then((snapshot) => {
+        if (snapshot.exists()) {
+            const patients = snapshot.val();
+            patientList.innerHTML = '';
+
+            Object.keys(patients).forEach(key => {
+                const patient = patients[key];
+                const li = document.createElement('li');
+                li.innerHTML = `Name: ${patient.name}, Age: ${patient.age}, Gender: ${patient.gender}`;
+                patientList.appendChild(li);
+            });
+        } else {
+            console.log('No patients found');
+        }
+    }).catch((error) => {
+        console.error('Error fetching patients: ' + error.message);
+    });
+}
+
+// Logout function
 function logout() {
-    auth.signOut()
+    signOut(auth)
         .then(() => {
             document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('signin').style.display = 'block';
+            toggleForm('signin');
         })
         .catch((error) => {
-            console.error('Error signing out:', error);
+            alert('Error logging out: ' + error.message);
         });
 }
+
 
 
 
